@@ -29,60 +29,128 @@
 #include "util/random.hpp"
 #include "util/face-uri.hpp"
 
+#include "ns3/log.h"
+#include "ns3/packet.h"
+#include "ns3/node.h"
+#include "ns3/assert.h"
+#include "ns3/simulator.h"
+
+#include "ns3/core-module.h"
+#include "ns3/network-module.h"
+#include "ns3/point-to-point-module.h"
+#include "ns3/point-to-point-layout-module.h"
+#include "ns3/ndnSIM-module.h"
+
+NS_LOG_COMPONENT_DEFINE("ndn.cxx.Face");
+
 namespace ndn {
 
 Face::Face()
-  : m_internalIoService(new boost::asio::io_service())
+  : ::nfd::Face(::nfd::FaceUri("ndnFace://"), ::nfd::FaceUri("ndnFace://"))
+  , m_internalIoService(new boost::asio::io_service())
   , m_ioService(*m_internalIoService)
-  , m_internalKeyChain(new KeyChain())
+  // , m_internalKeyChain(new KeyChain())
   , m_impl(new Impl(*this))
 {
   construct(*m_internalKeyChain);
+
+  ns3::Ptr<ns3::Node> node = ns3::NodeList::GetNode(ns3::Simulator::GetContext());
+  NS_LOG_INFO(node << " Creating ndn::Face");
+
+  // NS_ASSERT_MSG(node->GetObject<ns3::ndn::L3Protocol>() != 0,
+  //               " NDN stack should be installed on the node " << node);
+
+  // node->GetObject<ns3::ndn::L3Protocol>()->addFace(make_shared<::nfd::Face>(*this));
 }
 
 Face::Face(boost::asio::io_service& ioService)
-  : m_ioService(ioService)
-  , m_internalKeyChain(new KeyChain())
+  : ::nfd::Face(::nfd::FaceUri("ndnFace://"), ::nfd::FaceUri("ndnFace://"))
+  , m_ioService(ioService)
+    //, m_internalKeyChain(new KeyChain())
   , m_impl(new Impl(*this))
 {
-  construct(*m_internalKeyChain);
+  //construct(*m_internalKeyChain);
+
+  // ns3::Ptr<ns3::Node> node = ns3::NodeList::GetNode(ns3::Simulator::GetContext());
+  // NS_LOG_INFO(node << "Creating ndn::Face");
+
+  // NS_ASSERT_MSG(node->GetObject<ns3::ndn::L3Protocol>() != 0,
+  //                "NDN stack should be installed on the node " << node);
+
+  //node->GetObject<ns3::ndn::L3Protocol>()->addFace((*this).shared_from_this());
 }
 
 Face::Face(const std::string& host, const std::string& port/* = "6363"*/)
-  : m_internalIoService(new boost::asio::io_service())
+  : ::nfd::Face(::nfd::FaceUri("ndnFace://"), ::nfd::FaceUri("ndnFace://"))
+  , m_internalIoService(new boost::asio::io_service())
   , m_ioService(*m_internalIoService)
-  , m_internalKeyChain(new KeyChain())
+    //, m_internalKeyChain(new KeyChain())
   , m_impl(new Impl(*this))
 {
-  construct(make_shared<TcpTransport>(host, port), *m_internalKeyChain);
+  //construct(make_shared<TcpTransport>(host, port), *m_internalKeyChain);
+
+  // ns3::Ptr<ns3::Node> node = ns3::NodeList::GetNode(ns3::Simulator::GetContext());
+  // NS_LOG_INFO(node << "Creating ndn::Face");
+
+  // NS_ASSERT_MSG(node->GetObject<ns3::ndn::L3Protocol>() != 0,
+  //                "NDN stack should be installed on the node " << node);
+
+  //node->GetObject<ns3::ndn::L3Protocol>()->addFace((*this).shared_from_this());
 }
 
 Face::Face(const shared_ptr<Transport>& transport)
-  : m_internalIoService(new boost::asio::io_service())
+  : ::nfd::Face(::nfd::FaceUri("ndnFace://"), ::nfd::FaceUri("ndnFace://"))
+  , m_internalIoService(new boost::asio::io_service())
   , m_ioService(*m_internalIoService)
-  , m_internalKeyChain(new KeyChain())
+    //, m_internalKeyChain(new KeyChain())
   , m_impl(new Impl(*this))
 {
-  construct(transport, *m_internalKeyChain);
+  //construct(transport, *m_internalKeyChain);
+
+  // ns3::Ptr<ns3::Node> node = ns3::NodeList::GetNode(ns3::Simulator::GetContext());
+  // NS_LOG_INFO(node << "Creating ndn::Face");
+
+  // NS_ASSERT_MSG(node->GetObject<ns3::ndn::L3Protocol>() != 0,
+  //                "NDN stack should be installed on the node " << node);
+
+  //node->GetObject<ns3::ndn::L3Protocol>()->addFace((*this).shared_from_this());
 }
 
 Face::Face(const shared_ptr<Transport>& transport,
            boost::asio::io_service& ioService)
-  : m_ioService(ioService)
-  , m_internalKeyChain(new KeyChain())
+  : ::nfd::Face(::nfd::FaceUri("ndnFace://"), ::nfd::FaceUri("ndnFace://"))
+  , m_ioService(ioService)
+    //, m_internalKeyChain(new KeyChain())
   , m_impl(new Impl(*this))
 {
-  construct(transport, *m_internalKeyChain);
+  //construct(transport, *m_internalKeyChain);
+
+  // ns3::Ptr<ns3::Node> node = ns3::NodeList::GetNode(ns3::Simulator::GetContext());
+  // NS_LOG_INFO(node << "Creating ndn::Face");
+
+  // NS_ASSERT_MSG(node->GetObject<ns3::ndn::L3Protocol>() != 0,
+  //                "NDN stack should be installed on the node " << node);
+
+  //node->GetObject<ns3::ndn::L3Protocol>()->addFace((*this).shared_from_this());
 }
 
 Face::Face(shared_ptr<Transport> transport,
            boost::asio::io_service& ioService,
            KeyChain& keyChain)
-  : m_ioService(ioService)
-  , m_internalKeyChain(nullptr)
+  : ::nfd::Face(::nfd::FaceUri("ndnFace://"), ::nfd::FaceUri("ndnFace://"))
+  , m_ioService(ioService)
+    //, m_internalKeyChain(nullptr)
   , m_impl(new Impl(*this))
 {
-  construct(transport, keyChain);
+  //construct(transport, keyChain);
+
+  // ns3::Ptr<ns3::Node> node = ns3::NodeList::GetNode(ns3::Simulator::GetContext());
+  // NS_LOG_INFO(node << "Creating ndn::Face");
+
+  // NS_ASSERT_MSG(node->GetObject<ns3::ndn::L3Protocol>() != 0,
+  //                "NDN stack should be installed on the node " << node);
+
+  // node->GetObject<ns3::ndn::L3Protocol>()->addFace((*this).shared_from_this());
 }
 
 void
@@ -124,11 +192,11 @@ Face::construct(KeyChain& keyChain)
 void
 Face::construct(shared_ptr<Transport> transport, KeyChain& keyChain)
 {
-  m_nfdController.reset(new nfd::Controller(*this, keyChain));
+  m_nfdController.reset(new nfd::Controller(*this, ns3::ndn::StackHelper::getKeyChain()));
 
-  m_transport = transport;
+  // m_transport = transport;
 
-  m_impl->ensureConnected(false);
+  // m_impl->ensureConnected(false);
 }
 
 Face::~Face() = default;
@@ -136,6 +204,8 @@ Face::~Face() = default;
 const PendingInterestId*
 Face::expressInterest(const Interest& interest, const OnData& onData, const OnTimeout& onTimeout)
 {
+  NS_LOG_INFO (">> Interest: " << interest.getName());
+
   shared_ptr<Interest> interestToExpress = make_shared<Interest>(interest);
 
   // Use `interestToExpress` to avoid wire format creation for the original Interest
@@ -143,7 +213,12 @@ Face::expressInterest(const Interest& interest, const OnData& onData, const OnTi
     throw Error("Interest size exceeds maximum limit");
 
   // If the same ioService thread, dispatch directly calls the method
-  m_ioService.dispatch([=] { m_impl->asyncExpressInterest(interestToExpress, onData, onTimeout); });
+  //m_ioService.dispatch([=] { m_impl->asyncExpressInterest(interestToExpress, onData, onTimeout); });
+  // m_impl->m_scheduler.scheduleEvent(time::seconds(0),
+  //                                   [&interestToExpress, &onData, &onTimeout, this] {
+  //                                     m_impl->asyncExpressInterest(interestToExpress, onData, onTimeout);
+  //                                   });
+  m_impl->asyncExpressInterest(interestToExpress, onData, onTimeout);
 
   return reinterpret_cast<const PendingInterestId*>(interestToExpress.get());
 }
@@ -162,6 +237,8 @@ Face::expressInterest(const Name& name,
 void
 Face::put(const Data& data)
 {
+   NS_LOG_INFO (">> Data: " << data.getName());
+
   // Use original `data`, since wire format should already exist for the original Data
   if (data.wireEncode().size() > MAX_NDN_PACKET_SIZE)
     throw Error("Data size exceeds maximum limit");
@@ -171,19 +248,20 @@ Face::put(const Data& data)
     dataPtr = data.shared_from_this();
   }
   catch (const bad_weak_ptr& e) {
-    std::cerr << "Face::put WARNING: the supplied Data should be created using make_shared<Data>()"
-              << std::endl;
+    NS_LOG_INFO("Face::put WARNING: the supplied Data should be created using make_shared<Data>()");
     dataPtr = make_shared<Data>(data);
   }
 
   // If the same ioService thread, dispatch directly calls the method
-  m_ioService.dispatch([=] { m_impl->asyncPutData(dataPtr); });
+  // m_ioService.dispatch([=] { m_impl->asyncPutData(dataPtr); });
+  m_impl->asyncPutData(dataPtr);
 }
 
 void
 Face::removePendingInterest(const PendingInterestId* pendingInterestId)
 {
-  m_ioService.post([=] { m_impl->asyncRemovePendingInterest(pendingInterestId); });
+  // m_ioService.post([=] { m_impl->asyncRemovePendingInterest(pendingInterestId); });
+  m_impl->asyncRemovePendingInterest(pendingInterestId);
 }
 
 size_t
@@ -230,10 +308,13 @@ const InterestFilterId*
 Face::setInterestFilter(const InterestFilter& interestFilter,
                         const OnInterest& onInterest)
 {
+  NS_LOG_INFO("Set Interest Filter << " << interestFilter);
+
   shared_ptr<InterestFilterRecord> filter =
     make_shared<InterestFilterRecord>(interestFilter, onInterest);
 
-  getIoService().post([=] { m_impl->asyncSetInterestFilter(filter); });
+  // getIoService().post([=] { m_impl->asyncSetInterestFilter(filter); });
+  m_impl->asyncSetInterestFilter(filter);
 
   return reinterpret_cast<const InterestFilterId*>(filter.get());
 }
@@ -350,15 +431,19 @@ Face::registerPrefix(const Name& prefix,
 void
 Face::unsetInterestFilter(const RegisteredPrefixId* registeredPrefixId)
 {
-  m_ioService.post([=] { m_impl->asyncUnregisterPrefix(registeredPrefixId,
-                                                       UnregisterPrefixSuccessCallback(),
-                                                       UnregisterPrefixFailureCallback()); });
+  // m_ioService.post([=] { m_impl->asyncUnregisterPrefix(registeredPrefixId,
+  //                                                      UnregisterPrefixSuccessCallback(),
+  //                                                      UnregisterPrefixFailureCallback()); });
+  m_impl->asyncUnregisterPrefix(registeredPrefixId,
+                                UnregisterPrefixSuccessCallback(),
+                                UnregisterPrefixFailureCallback());
 }
 
 void
 Face::unsetInterestFilter(const InterestFilterId* interestFilterId)
 {
-  m_ioService.post([=] { m_impl->asyncUnsetInterestFilter(interestFilterId); });
+  // m_ioService.post([=] { m_impl->asyncUnsetInterestFilter(interestFilterId); });
+  m_impl->asyncUnsetInterestFilter(interestFilterId);
 }
 
 void
@@ -366,7 +451,8 @@ Face::unregisterPrefix(const RegisteredPrefixId* registeredPrefixId,
                        const UnregisterPrefixSuccessCallback& onSuccess,
                        const UnregisterPrefixFailureCallback& onFailure)
 {
-  m_ioService.post([=] { m_impl->asyncUnregisterPrefix(registeredPrefixId,onSuccess, onFailure); });
+  // m_ioService.post([=] { m_impl->asyncUnregisterPrefix(registeredPrefixId,onSuccess, onFailure); });
+  m_impl->asyncUnregisterPrefix(registeredPrefixId,onSuccess, onFailure);
 }
 
 void
@@ -412,7 +498,8 @@ Face::processEvents(const time::milliseconds& timeout/* = time::milliseconds::ze
 void
 Face::shutdown()
 {
-  m_ioService.post([this] { this->asyncShutdown(); });
+  // m_ioService.post([this] { this->asyncShutdown(); });
+  this->asyncShutdown();
 }
 
 void
@@ -421,8 +508,10 @@ Face::asyncShutdown()
   m_impl->m_pendingInterestTable.clear();
   m_impl->m_registeredPrefixTable.clear();
 
-  if (m_transport->isConnected())
-    m_transport->close();
+  // if (m_transport->isConnected())
+  //   m_transport->close();
+
+  this->close();
 
   m_impl->m_ioServiceWork.reset();
 }
@@ -449,6 +538,42 @@ Face::onReceiveElement(const Block& blockFromDaemon)
       m_impl->satisfyPendingInterests(*data);
     }
   // ignore any other type
+}
+
+void
+Face::sendInterest(const Interest& interest)
+{
+  NS_LOG_FUNCTION(this << interest);
+  this->emitSignal(onSendInterest, interest); // not sure if we need this
+  this->onReceiveElement(interest.wireEncode());
+}
+
+void
+Face::sendData(const Data& data)
+{
+  NS_LOG_FUNCTION(this << data);
+  this->emitSignal(onSendData, data); // not sure if we need this
+  this->onReceiveElement(data.wireEncode());
+}
+
+void
+Face::onReceiveInterest(const Interest& interest)
+{
+  NS_LOG_FUNCTION(this << interest);
+  this->emitSignal(onReceiveInterest, interest);
+}
+
+void
+Face::onReceiveData(const Data& data)
+{
+  NS_LOG_FUNCTION(this << data);
+  this->emitSignal(onReceiveData, data);
+}
+
+void
+Face::close()
+{
+  this->fail("close");
 }
 
 } // namespace ndn

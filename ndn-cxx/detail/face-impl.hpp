@@ -40,6 +40,12 @@
 #include "../management/nfd-controller.hpp"
 #include "../management/nfd-command-options.hpp"
 
+#include "ns3/core-module.h"
+#include "ns3/network-module.h"
+#include "ns3/point-to-point-module.h"
+#include "ns3/point-to-point-layout-module.h"
+#include "ns3/ndnSIM-module.h"
+
 namespace ndn {
 
 class Face::Impl : noncopyable
@@ -102,19 +108,25 @@ public:
   void
   ensureConnected(bool wantResume)
   {
-    if (!m_face.m_transport->isConnected())
-      m_face.m_transport->connect(m_face.m_ioService,
-                                  bind(&Face::onReceiveElement, &m_face, _1));
+    // if (!m_face.m_transport->isConnected())
+    //   m_face.m_transport->connect(m_face.m_ioService,
+    //                               bind(&Face::onReceiveElement, &m_face, _1));
 
-    if (wantResume && !m_face.m_transport->isExpectingData())
-      m_face.m_transport->resume();
+    // if (wantResume && !m_face.m_transport->isExpectingData())
+    //   m_face.m_transport->resume();
+    ns3::Ptr<ns3::Node> node = ns3::NodeList::GetNode(ns3::Simulator::GetContext());
+
+    NS_ASSERT_MSG(node->GetObject<ns3::ndn::L3Protocol>() != 0,
+                  " NDN stack should be installed on the node " << node);
+
+    node->GetObject<ns3::ndn::L3Protocol>()->addFace(m_face.shared_from_this());
   }
 
   void
   asyncExpressInterest(const shared_ptr<const Interest>& interest,
                        const OnData& onData, const OnTimeout& onTimeout)
   {
-    this->ensureConnected(true);
+    // this->ensureConnected(true);
 
     auto entry =
       m_pendingInterestTable.insert(make_shared<PendingInterest>(interest,
@@ -122,15 +134,16 @@ public:
                                                                  ref(m_scheduler))).first;
     (*entry)->setDeleter([this, entry] { m_pendingInterestTable.erase(entry); });
 
-    if (!interest->getLocalControlHeader().empty(nfd::LocalControlHeader::ENCODE_NEXT_HOP)) {
-      // encode only NextHopFaceId towards the forwarder
-      m_face.m_transport->send(interest->getLocalControlHeader()
-                               .wireEncode(*interest, nfd::LocalControlHeader::ENCODE_NEXT_HOP),
-                               interest->wireEncode());
-    }
-    else {
-      m_face.m_transport->send(interest->wireEncode());
-    }
+    // if (!interest->getLocalControlHeader().empty(nfd::LocalControlHeader::ENCODE_NEXT_HOP)) {
+    //   // encode only NextHopFaceId towards the forwarder
+    //   m_face.m_transport->send(interest->getLocalControlHeader()
+    //                            .wireEncode(*interest, nfd::LocalControlHeader::ENCODE_NEXT_HOP),
+    //                            interest->wireEncode());
+    // }
+    // else {
+    //   m_face.m_transport->send(interest->wireEncode());
+    // }
+    m_face.onReceiveInterest(*interest);
   }
 
   void
@@ -144,15 +157,16 @@ public:
   {
     this->ensureConnected(true);
 
-    if (!data->getLocalControlHeader().empty(nfd::LocalControlHeader::ENCODE_CACHING_POLICY)) {
-      m_face.m_transport->send(
-        data->getLocalControlHeader().wireEncode(*data,
-                                                 nfd::LocalControlHeader::ENCODE_CACHING_POLICY),
-        data->wireEncode());
-    }
-    else {
-      m_face.m_transport->send(data->wireEncode());
-    }
+    // if (!data->getLocalControlHeader().empty(nfd::LocalControlHeader::ENCODE_CACHING_POLICY)) {
+    //   m_face.m_transport->send(
+    //     data->getLocalControlHeader().wireEncode(*data,
+    //                                              nfd::LocalControlHeader::ENCODE_CACHING_POLICY),
+    //     data->wireEncode());
+    // }
+    // else {
+    //   m_face.m_transport->send(data->wireEncode());
+    // }
+    m_face.onReceiveData(*data);
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////

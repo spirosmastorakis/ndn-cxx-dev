@@ -30,6 +30,9 @@
 #include "data.hpp"
 #include "security/signing-info.hpp"
 
+#include "ns3/ndnSIM/NFD/daemon/face/face.hpp"
+#include "ns3/ndnSIM/NFD/daemon/table/pit-entry.hpp"
+
 #define NDN_FACE_KEEP_DEPRECATED_REGISTRATION_SIGNING
 
 #ifdef NDN_FACE_KEEP_DEPRECATED_REGISTRATION_SIGNING
@@ -94,11 +97,10 @@ typedef function<void()> UnregisterPrefixSuccessCallback;
  */
 typedef function<void(const std::string&)> UnregisterPrefixFailureCallback;
 
-
 /**
  * @brief Abstraction to communicate with local or remote NDN forwarder
  */
-class Face : noncopyable
+class Face : public ::nfd::Face, noncopyable
 {
 public:
   class Error : public std::runtime_error
@@ -192,6 +194,40 @@ public: // constructors
        KeyChain& keyChain);
 
   ~Face();
+
+  // Inherited by nfd::Face
+
+  /**
+   * @brief Send Interest towards application
+   */
+  virtual void
+  sendInterest(const Interest& interest);
+
+  /**
+   * @brief Send Data towards application
+   */
+  virtual void
+  sendData(const Data& data);
+
+  /**
+   * @brief Send Interest towards NFD
+   */
+  void
+  onReceiveInterest(const Interest& interest);
+
+  /**
+   * @brief Send Data towards NFD
+   */
+  void
+  onReceiveData(const Data& data);
+
+  /** \brief Close the face
+   *
+   *  This terminates all communication on the face and cause
+   *  onFail() method event to be invoked
+   */
+  virtual void
+  close();
 
 public: // consumer
   /**
@@ -646,7 +682,7 @@ private:
    *        currently Face does not keep the KeyChain passed in constructor
    *        because it's not needed, but this may change in the future
    */
-  unique_ptr<KeyChain> m_internalKeyChain;
+  shared_ptr<KeyChain> m_internalKeyChain;
 
   unique_ptr<nfd::Controller> m_nfdController;
 
