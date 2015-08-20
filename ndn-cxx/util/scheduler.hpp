@@ -35,11 +35,6 @@ namespace scheduler {
 
 struct EventIdImpl; ///< \brief Private storage of information about the event
 
-// /**
-//  * \brief Opaque type (shared_ptr) representing ID of the scheduled event
-//  */
-// typedef shared_ptr<EventIdImpl> EventId;
-
 /** \class EventId
  *  \brief Opaque type (shared_ptr) representing ID of a scheduled event
  */
@@ -75,10 +70,6 @@ public:
   cancelAllEvents();
 
 private:
-  void
-  onEvent(const boost::system::error_code& code);
-
-private:
   struct EventInfo
   {
     EventInfo(const time::nanoseconds& after, const Event& event);
@@ -110,9 +101,6 @@ private:
 
   EventQueue m_events;
   EventQueue::iterator m_scheduledEvent;
-  monotonic_deadline_timer m_deadlineTimer;
-
-  bool m_isEventExecuting;
 };
 
 } // namespace scheduler
