@@ -30,8 +30,7 @@
 #include "data.hpp"
 #include "security/signing-info.hpp"
 
-#include "ns3/ndnSIM/NFD/daemon/face/face.hpp"
-#include "ns3/ndnSIM/NFD/daemon/table/pit-entry.hpp"
+#include "ns3/ndnSIM/NFD/daemon/face/local-face.hpp"
 
 #define NDN_FACE_KEEP_DEPRECATED_REGISTRATION_SIGNING
 
@@ -100,7 +99,7 @@ typedef function<void(const std::string&)> UnregisterPrefixFailureCallback;
 /**
  * @brief Abstraction to communicate with local or remote NDN forwarder
  */
-class Face : public ::nfd::Face, noncopyable
+class Face : noncopyable
 {
 public:
   class Error : public std::runtime_error
@@ -151,83 +150,7 @@ public: // constructors
   explicit
   Face(boost::asio::io_service& ioService);
 
-  /**
-   * @brief Create a new Face using TcpTransport
-   *
-   * @param host The host of the NDN forwarder
-   * @param port (optional) The port or service name of the NDN forwarder (**default**: "6363")
-   *
-   * @throws Face::Error on unsupported protocol
-   */
-  Face(const std::string& host, const std::string& port = "6363");
-
-  /**
-   * @brief Create a new Face using the given Transport
-   *
-   * @param transport A shared_ptr to a Transport object used for communication
-   *
-   * @throws Face::Error on unsupported protocol
-   */
-  explicit
-  Face(const shared_ptr<Transport>& transport);
-
-  /**
-   * @brief Create a new Face using the given Transport and IO service object
-   *
-   * @sa Face(boost::asio::io_service&)
-   *
-   * @throws Face::Error on unsupported protocol
-   */
-  Face(const shared_ptr<Transport>& transport,
-       boost::asio::io_service& ioService);
-
-  /**
-   * @brief Create a new Face using the given Transport and IO service object
-   * @param transport the Transport used for communication
-   * @param ioService the io_service that controls all IO operations
-   * @param keyChain the KeyChain to sign commands
-   * @throws Face::Error on unsupported protocol
-   * @note shared_ptr is passed by value because ownership is shared with this class
-   */
-  Face(shared_ptr<Transport> transport,
-       boost::asio::io_service& ioService,
-       KeyChain& keyChain);
-
   ~Face();
-
-  // Inherited by nfd::Face
-
-  /**
-   * @brief Send Interest towards application
-   */
-  virtual void
-  sendInterest(const Interest& interest);
-
-  /**
-   * @brief Send Data towards application
-   */
-  virtual void
-  sendData(const Data& data);
-
-  /**
-   * @brief Send Interest towards NFD
-   */
-  void
-  onReceiveInterest(const Interest& interest);
-
-  /**
-   * @brief Send Data towards NFD
-   */
-  void
-  onReceiveData(const Data& data);
-
-  /** \brief Close the face
-   *
-   *  This terminates all communication on the face and cause
-   *  onFail() method event to be invoked
-   */
-  virtual void
-  close();
 
 public: // consumer
   /**
@@ -603,25 +526,7 @@ public: // producer
 
 public: // IO routine
   /**
-   * @brief Process any data to receive or call timeout callbacks.
-   *
-   * This call will block forever (default timeout == 0) to process IO on the face.
-   * To exit, one expected to call face.shutdown() from one of the callback methods.
-   *
-   * If positive timeout is specified, then processEvents will exit after this timeout, if
-   * not stopped earlier with face.shutdown() or when all active events finish.  The call
-   * can be called repeatedly, if desired.
-   *
-   * If negative timeout is specified, then processEvents will not block and process only
-   * pending events.
-   *
-   * @param timeout     maximum time to block the thread
-   * @param keepThread  Keep thread in a blocked state (in event processing), even when
-   *                    there are no outstanding events (e.g., no Interest/Data is expected)
-   *
-   * @throw This may throw an exception for reading data or in the callback for processing
-   * the data.  If you call this from an main event loop, you may want to catch and
-   * log/disregard all exceptions.
+   * @brief Noop (kept for compatibility)
    */
   void
   processEvents(const time::milliseconds& timeout = time::milliseconds::zero(),
@@ -639,55 +544,64 @@ public: // IO routine
   shutdown();
 
   /**
-   * @brief Get reference to IO service object
+   * @brief Return nullptr (kept for compatibility)
    */
   boost::asio::io_service&
   getIoService()
   {
-    return m_ioService;
+    return *static_cast<boost::asio::io_service*>(nullptr);
   }
 
 private:
-
-  /**
-   * @throws ConfigFile::Error on parse error and unsupported protocols
-   */
   void
-  construct(KeyChain& keyChain);
-
-  /**
-   * @throws Face::Error on unsupported protocol
-   * @note shared_ptr is passed by value because ownership is transferred to this function
-   */
-  void
-  construct(shared_ptr<Transport> transport, KeyChain& keyChain);
-
-  void
-  onReceiveElement(const Block& wire);
-
-  void
-  asyncShutdown();
+  construct();
 
 private:
-  /// the IO service owned by this Face, could be null
-  unique_ptr<boost::asio::io_service> m_internalIoService;
-  /// the IO service used by this Face
-  boost::asio::io_service& m_ioService;
+  class Impl;
 
-  shared_ptr<Transport> m_transport;
+  class NfdFace : public ::nfd::LocalFace
+  {
+  public:
+    NfdFace(::ndn::Face& face, const ::nfd::FaceUri& localUri, const ::nfd::FaceUri& remoteUri);
 
+  public: // from ::nfd::LocalFace
+    /**
+     * @brief Send Interest towards application
+     */
+    virtual void
+    sendInterest(const Interest& interest);
+
+    /**
+     * @brief Send Data towards application
+     */
+    virtual void
+    sendData(const Data& data);
+
+    /** \brief Close the face
+     *
+     *  This terminates all communication on the face and cause
+     *  onFail() method event to be invoked
+     */
+    virtual void
+    close();
+
+  private:
+    friend class ::ndn::Face::Impl;
+    ::ndn::Face& m_appFace;
+  };
+
+private:
   /** @brief if not null, a pointer to an internal KeyChain owned by Face
    *  @note if a KeyChain is supplied to constructor, this pointer will be null,
    *        and the passed KeyChain is given to nfdController;
    *        currently Face does not keep the KeyChain passed in constructor
    *        because it's not needed, but this may change in the future
    */
-  shared_ptr<KeyChain> m_internalKeyChain;
+  unique_ptr<KeyChain> m_internalKeyChain;
 
   unique_ptr<nfd::Controller> m_nfdController;
-
-  class Impl;
   unique_ptr<Impl> m_impl;
+  shared_ptr<NfdFace> m_nfdFace;
 };
 
 } // namespace ndn
